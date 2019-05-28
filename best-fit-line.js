@@ -10,7 +10,7 @@ let y_normal = [];
 
 let m, b;
 
-const learningRate = 0.2;
+const learningRate = 0.95;
 const optimizer = tf.train.sgd(learningRate);
 
 function setup() {

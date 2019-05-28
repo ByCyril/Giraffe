@@ -8,16 +8,41 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js"></script>
+    <link rel="stylesheet" href="main.css" />
     <title>Document</title>
   </head>
   <body>
-    <input id="data" />
-    <button onclick="graph()">Grap</button>
-    <div style="width: 100%">
-      <canvas id="myChart"></canvas>
-    </div>
+    <button id="FileSelect" onclick="sumOfSquares()">Open</button>
+    <input id="FileSelect" type="file" name="name" style="display: none;" />
 
-    <script src="graphing.js"></script>
+    <table style="width:100%">
+      <tr style="text-align: left">
+        <th>Source of Variation</th>
+        <th>Sum of Squares</th>
+        <th>Degrees of Freedom</th>
+        <th>Mean Square</th>
+        <th>F</th>
+      </tr>
+      <tr>
+        <td>Treatments</td>
+        <td id="SSTr">SSTr</td>
+        <td id="df1">df1</td>
+        <td id="MSTr">MSTr</td>
+        <td id="f">f</td>
+      </tr>
+      <tr>
+        <td>Error</td>
+        <td id="SSE">SSE</td>
+        <td id="df2">df2</td>
+        <td id="MSE">MSE</td>
+      </tr>
+      <tr>
+        <td>Total</td>
+        <td id="SST">SST</td>
+        <td id="df3">df3</td>
+      </tr>
+    </table>
   </body>
+  <script src="main.js"></script>
 </html>
