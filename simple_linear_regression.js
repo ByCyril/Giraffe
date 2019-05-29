@@ -1,47 +1,53 @@
-const xData = tf.tensor1d([
-  0.2,
-  0.23,
-  0.4,
-  0.35,
-  0.4,
-  0.45,
-  0.5,
-  0.55,
-  0.6,
-  0.68,
-  0.7,
-  0.76
-]);
-const yData = tf.tensor1d([
-  -0.7,
-  -0.4,
-  -0.35,
-  0.18,
-  0.38,
-  -0.1,
-  0.2,
-  -0.3,
-  0.3,
-  0.18,
-  0.5,
-  0.22
-]);
-const meanX = tf.mean(xData);
-const meanY = tf.mean(yData);
+var xData = tf.tensor1d([0]);
+var yData = tf.tensor1d([0]);
 
+var meanX = tf.scalar(0);
+var meanY = tf.scalar(0);
 var sse = tf.scalar(0);
 var sst = tf.scalar(0);
 var b0 = tf.scalar(0);
 var b1 = tf.scalar(0);
 
-function regressionLine() {
-  const sumX = xData.sub(meanX);
-  const sumY = yData.sub(meanY);
-  const sxy = sumX.mul(sumY).sum();
-  sxx = sumX.square().sum();
+function getData() {
+  const xs = document.getElementById("xData").value.split(",");
+  const ys = document.getElementById("yData").value.split(",");
 
-  b1 = sxy.div(sxx);
-  b0 = meanY.sub(b1.mul(meanX));
+  if (xs.length === 0 || ys.length === 0) {
+    return;
+  }
+  var parsedX = [];
+  var parsedY = [];
+
+  xs.forEach(function(x) {
+    parsedX.push(parseFloat(x));
+  });
+
+  ys.forEach(function(y) {
+    parsedY.push(parseFloat(y));
+  });
+
+  xData = tf.tensor1d(parsedX);
+  yData = tf.tensor1d(parsedY);
+}
+
+function regressionLine() {
+  getData();
+
+  meanX = tf.mean(xData);
+  meanY = tf.mean(yData);
+
+  tf.tidy(() => {
+    const sumX = xData.sub(meanX);
+    const sumY = yData.sub(meanY);
+    const sxy = sumX.mul(sumY).sum();
+
+    sxx = tf.keep(sumX.square().sum());
+    b1 = tf.keep(sxy.div(sxx));
+    b0 = tf.keep(meanY.sub(b1.mul(meanX)));
+  });
+
+  showButtons();
+  outsideTensors("first");
 }
 
 function regressionFunction(x) {
@@ -49,95 +55,135 @@ function regressionFunction(x) {
 }
 
 function coefficienfOfDetermination() {
-  sse = yData
-    .sub(regressionFunction(xData))
-    .square()
-    .sum();
+  tf.tidy(() => {
+    const x = regressionFunction(xData);
+    sse = tf.keep(
+      yData
+        .sub(x)
+        .square()
+        .sum()
+    );
 
-  sst = yData
-    .sub(meanY)
-    .square()
-    .sum();
+    sst = tf.keep(
+      yData
+        .sub(meanY)
+        .square()
+        .sum()
+    );
 
-  const one = tf.scalar(1);
+    const one = tf.scalar(1);
+    const cod = one.sub(sse.div(sst)).dataSync();
 
-  return one.sub(sse.div(sst));
+    displayCoefficientOfDetermination(cod);
+  });
 }
 
 function sampleCorrelation() {
-  const a = xData.sub(meanX);
-  const b = yData.sub(meanY);
-  const ab = a.mul(b).sum();
-  const aa = a.square().sum();
-  const bb = b.square().sum();
+  tf.tidy(() => {
+    const a = xData.sub(meanX);
+    const b = yData.sub(meanY);
+    const ab = a.mul(b).sum();
+    const aa = a.square().sum();
+    const bb = b.square().sum();
 
-  return ab.div(aa.mul(bb).sqrt());
+    const x = ab.div(aa.mul(bb).sqrt()).dataSync();
+
+    displaySampleCorrelation(x);
+  });
 }
 
 // Confidence interval for the regression slope
-function confidenceIntervalForSlope(t) {
-  const n = xData.shape[0];
-  const mse = sse.div(tf.scalar(n - 2));
+function confidenceIntervalForSlope() {
+  const tScore = document.getElementById("tscore-confidenceIntervalSlope")
+    .value;
 
-  const sxx = xData
-    .sub(meanX)
-    .square()
-    .sum();
+  tf.tidy(() => {
+    const t = tf.scalar(parseFloat(tScore));
+    const n = xData.shape[0];
+    const mse = sse.div(tf.scalar(n - 2));
 
-  const q = tf.scalar(t).mul(mse.div(sxx).sqrt());
-  const c1 = b1.sub(q);
-  const c2 = b1.add(q);
+    const sxx = xData
+      .sub(meanX)
+      .square()
+      .sum();
 
-  c1.print();
-  c2.print();
+    const q = t.mul(mse.div(sxx).sqrt());
+    const c1 = b1.sub(q).dataSync();
+    const c2 = b1.add(q).dataSync();
+
+    displayConfidenceIntervalForRegressionSlope(c1, c2);
+  });
 }
 
 // Confidence interval for an individual observation
-function predictionInterval(x, tScore) {
-  const y = regressionFunction(x);
+function predictionInterval() {
+  const xInput = document.getElementById("x-predictionInterval").value;
+  const t = document.getElementById("tscore-predictionInterval").value;
 
-  const n = xData.shape[0];
-  const sxx = xData
-    .sub(meanX)
-    .square()
-    .sum();
-  const one = tf.scalar(1);
+  tf.tidy(() => {
+    const tScore = tf.scalar(parseFloat(t));
+    const x = tf.scalar(parseFloat(xInput));
+    const y = regressionFunction(x);
 
-  const s = sse.div(tf.scalar(n - 2)).sqrt();
+    const n = xData.shape[0];
+    const sxx = xData
+      .sub(meanX)
+      .square()
+      .sum();
+    const one = tf.scalar(1);
 
-  const b = x
-    .sub(meanX)
-    .square()
-    .div(sxx);
-  const sa = one.add(one.div(n)).add(b);
+    const s = sse.div(tf.scalar(n - 2)).sqrt();
 
-  const c1 = y.sub(tScore.mul(s).mul(sa.sqrt()));
-  const c2 = y.add(tScore.mul(s).mul(sa.sqrt()));
-  c1.print();
-  c2.print();
+    const b = x
+      .sub(meanX)
+      .square()
+      .div(sxx);
+    const sa = one.add(one.div(n)).add(b);
+
+    const c1 = y.sub(tScore.mul(s).mul(sa.sqrt())).dataSync();
+    const c2 = y.add(tScore.mul(s).mul(sa.sqrt())).dataSync();
+    displayConfidenceIntervalForPredictionInterval(c1, c2);
+  });
 }
 
 // Confidence interval for the mean difference at x
-function confidenceIntervalDifference(x, t) {
-  const y = regressionFunction(x);
-  const sxx = xData
-    .sub(meanX)
-    .square()
-    .sum();
-  const n = xData.shape[0];
+function confidenceIntervalDifference() {
+  const xInput = document.getElementById("x-confidenceIntervalDifference")
+    .value;
+  const tScore = document.getElementById("tscore-confidenceIntervalDifference")
+    .value;
 
-  const s = sse.div(tf.scalar(n - 2)).sqrt();
+  tf.tidy(() => {
+    const x = tf.scalar(parseFloat(xInput));
+    const t = tf.scalar(parseFloat(tScore));
+    const y = regressionFunction(x);
+    const sxx = xData
+      .sub(meanX)
+      .square()
+      .sum();
+    const n = xData.shape[0];
 
-  const b = x
-    .sub(meanX)
-    .square()
-    .div(sxx);
-  const a = tf.scalar(1 / n);
-  const c = a.add(b).sqrt();
-  const q = t.mul(s).mul(c);
+    const s = sse.div(tf.scalar(n - 2)).sqrt();
 
-  const c1 = y.sub(q);
-  const c2 = y.add(q);
-  c1.print();
-  c2.print();
+    const b = x
+      .sub(meanX)
+      .square()
+      .div(sxx);
+    const a = tf.scalar(1 / n);
+    const c = a.add(b).sqrt();
+    const q = t.mul(s).mul(c);
+
+    const c1 = y.sub(q).dataSync();
+    const c2 = y.add(q).dataSync();
+
+    displayConfidenceIntervalDifference(c1, c2);
+  });
+}
+
+function insideTensors(label) {
+  console.log(label, "numTensors (inside tidy): " + tf.memory().numTensors);
+}
+
+function outsideTensors(label) {
+  console.log(label, "numTensors (outside tidy): " + tf.memory().numTensors);
 }

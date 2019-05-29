@@ -8,7 +8,61 @@
 
     <title>Simple Linear Regression</title>
   </head>
-  <body></body>
+  <body>
+    <div id="data">
+      <input id="xData" placeholder="X: " />
+      <input id="yData" placeholder="Y: " />
+      <br />
+      <button onclick="regressionLine()">Regression Line Parameters</button>
+    </div>
+    <br />
+    <div id="coefficienfOfDetermination">
+      <button
+        id="coefficienfOfDetermination-button"
+        onclick="coefficienfOfDetermination()"
+      >
+        Coefficient Of Determination
+      </button>
+      <p id="coefficienfOfDetermination-label"></p>
+    </div>
+
+    <div id="sampleCorrelation">
+      <button id="sampleCorrelation-button" onclick="sampleCorrelation()">
+        Sample Correlation
+      </button>
+      <p id="sampleCorrelation-label"></p>
+    </div>
+
+    <div id="confidenceIntervalSlope">
+      <input id="tscore-confidenceIntervalSlope" placeholder="T-Score" />
+      <button
+        id="confidenceIntervalSlope-button"
+        onclick="confidenceIntervalForSlope()"
+      >
+        Confidence Interval for Regression Slope
+      </button>
+      <p id="confidenceIntervalSlope-label"></p>
+    </div>
+
+    <div id="predictioninterval">
+      <input id="x-predictionInterval" placeholder="X" />
+      <input id="tscore-predictionInterval" placeholder="T-Score" />
+      <button onclick="predictionInterval()">
+        Confidence Interval for Prediction
+      </button>
+      <p id="predictionInterval-label"></p>
+    </div>
+
+    <div id="confidenceIntervalDifference">
+      <input id="x-confidenceIntervalDifference" placeholder="X" />
+      <input id="tscore-confidenceIntervalDifference" placeholder="T-Score" />
+      <button onclick="confidenceIntervalDifference()">
+        Confidence Interval for Difference
+      </button>
+      <p id="confidenceIntervalDifference-label"></p>
+    </div>
+  </body>
 
   <script src="simple_linear_regression.js"></script>
+  <script src="simple_linear_regression_interface.js"></script>
 </html>
